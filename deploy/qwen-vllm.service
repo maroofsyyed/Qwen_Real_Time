@@ -1,0 +1,31 @@
+[Unit]
+Description=Qwen2.5-VL vLLM Inference Server
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/qwen-camera
+Environment="PATH=/root/qwen-camera/venv/bin:/usr/local/bin:/usr/bin:/bin"
+EnvironmentFile=/root/qwen-camera/.env
+
+ExecStart=/root/qwen-camera/scripts/start_vllm_server.sh
+
+# Restart policy
+Restart=on-failure
+RestartSec=10s
+StartLimitInterval=300
+StartLimitBurst=3
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Logging
+StandardOutput=append:/var/log/qwen-service/vllm.log
+StandardError=append:/var/log/qwen-service/vllm-error.log
+
+[Install]
+WantedBy=multi-user.target
+

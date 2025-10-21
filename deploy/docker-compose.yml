@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  vllm-server:
+    image: rocm/pytorch:latest
+    container_name: qwen-vllm
+    restart: unless-stopped
+    
+    # GPU access (ROCm)
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    
+    group_add:
+      - video
+      - render
+    
+    # ROCm environment
+    environment:
+      - HSA_OVERRIDE_GFX_VERSION=11.0.0
+      - PYTORCH_ROCM_ARCH=gfx942
+      - GPU_MEMORY_UTILIZATION=0.90
+    
+    # Mount model and code
+    volumes:
+      - ${MODEL_PATH:-/root/models/qwen2.5-vl-32b}:/models/qwen:ro
+      - ./scripts:/app/scripts:ro
+      - vllm-cache:/root/.cache
+    
+    # Command
+    command: >
+      python -m vllm.entrypoints.openai.api_server
+      --model /models/qwen
+      --host 0.0.0.0
+      --port 12345
+      --dtype float16
+      --max-model-len 2048
+      --gpu-memory-utilization 0.90
+      --trust-remote-code
+    
+    ports:
+      - "12345:12345"
+    
+    networks:
+      - qwen-net
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:12345/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  webrtc-server:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+    
+    container_name: qwen-webrtc
+    restart: unless-stopped
+    
+    depends_on:
+      vllm-server:
+        condition: service_healthy
+    
+    environment:
+      - VLLM_HOST=vllm-server
+      - VLLM_PORT=12345
+      - HOST=0.0.0.0
+      - PORT=8000
+    
+    env_file:
+      - .env
+    
+    volumes:
+      - ./server:/app/server:ro
+      - ./client:/app/client:ro
+      - ./config.py:/app/config.py:ro
+    
+    ports:
+      - "8000:8000"
+      - "9090:9090"  # Metrics
+    
+    networks:
+      - qwen-net
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+networks:
+  qwen-net:
+    driver: bridge
+
+volumes:
+  vllm-cache:
+

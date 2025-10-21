@@ -1,0 +1,32 @@
+[Unit]
+Description=Qwen Vision-Language WebRTC Server
+After=network.target qwen-vllm.service
+Requires=qwen-vllm.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/qwen-camera
+Environment="PATH=/root/qwen-camera/venv/bin:/usr/local/bin:/usr/bin:/bin"
+EnvironmentFile=/root/qwen-camera/.env
+
+ExecStart=/root/qwen-camera/venv/bin/python -m server.main
+
+# Restart policy
+Restart=on-failure
+RestartSec=5s
+StartLimitInterval=300
+StartLimitBurst=5
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Logging
+StandardOutput=append:/var/log/qwen-service/webrtc.log
+StandardError=append:/var/log/qwen-service/webrtc-error.log
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Model files
+models/
+*.bin
+*.safetensors
+*.pth
+*.ckpt
+
+# Environment
+.env
+.env.local
+
+# Logs
+logs/
+*.log
+
+# SSL certs
+*.pem
+*.key
+*.crt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Test coverage
+.coverage
+htmlcov/
+
+# Benchmarks
+benchmark_results/
+*.csv
+
